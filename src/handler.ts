@@ -1,16 +1,17 @@
 export interface ToolResult {
   [x: string]: unknown;
-  content: Array<{ type: 'text'; text: string }>;
+  content: Array<{ type: "text"; text: string }>;
   isError?: boolean;
 }
 
 const ERROR_PATTERNS: Record<string, string> = {
-  'not found': 'リソースが見つかりません',
-  'unauthorized': '認証エラー。再認証が必要な可能性があります',
-  'forbidden': 'アクセス権限がありません',
-  'invalid': '入力パラメータが不正です',
-  'quota': 'API制限に達しました。しばらく待ってから再試行してください',
-  'rate limit': 'リクエスト制限に達しました。しばらく待ってから再試行してください',
+  "not found": "リソースが見つかりません",
+  "unauthorized": "認証エラー。再認証が必要な可能性があります",
+  "forbidden": "アクセス権限がありません",
+  "invalid": "入力パラメータが不正です",
+  "quota": "API制限に達しました。しばらく待ってから再試行してください",
+  "rate limit":
+    "リクエスト制限に達しました。しばらく待ってから再試行してください",
 };
 
 function translateError(message: string): string {
@@ -24,14 +25,14 @@ function translateError(message: string): string {
 }
 
 export async function handleToolCall<T>(
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
 ): Promise<ToolResult> {
   try {
     const result = await fn();
     return {
       content: [
         {
-          type: 'text',
+          type: "text",
           text: JSON.stringify(result, null, 2),
         },
       ],
@@ -41,7 +42,7 @@ export async function handleToolCall<T>(
     return {
       content: [
         {
-          type: 'text',
+          type: "text",
           text: translateError(errorMessage),
         },
       ],

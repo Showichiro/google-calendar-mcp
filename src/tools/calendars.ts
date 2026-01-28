@@ -1,11 +1,13 @@
-import { z } from 'zod';
-import { getCalendarClient } from '../client.js';
+import { z } from "zod";
+import { getCalendarClient } from "../client.ts";
 
 // スキーマ定義
 export const listCalendarsSchema = z.object({});
 
 export const getCalendarSchema = z.object({
-  calendarId: z.string().describe('カレンダーID（例: "primary" または メールアドレス）'),
+  calendarId: z.string().describe(
+    'カレンダーID（例: "primary" または メールアドレス）',
+  ),
 });
 
 // ツール実装
@@ -44,26 +46,27 @@ export async function getCalendar(params: z.infer<typeof getCalendarSchema>) {
 // ツール定義
 export const calendarTools = [
   {
-    name: 'list_calendars',
-    description: 'ユーザーがアクセス可能なカレンダーの一覧を取得します',
+    name: "list_calendars",
+    description: "ユーザーがアクセス可能なカレンダーの一覧を取得します",
     inputSchema: {
-      type: 'object' as const,
+      type: "object" as const,
       properties: {},
       required: [],
     },
   },
   {
-    name: 'get_calendar',
-    description: '指定したカレンダーの詳細情報を取得します',
+    name: "get_calendar",
+    description: "指定したカレンダーの詳細情報を取得します",
     inputSchema: {
-      type: 'object' as const,
+      type: "object" as const,
       properties: {
         calendarId: {
-          type: 'string',
-          description: 'カレンダーID（"primary" でプライマリカレンダー、またはメールアドレス形式のカレンダーID）',
+          type: "string",
+          description:
+            'カレンダーID（"primary" でプライマリカレンダー、またはメールアドレス形式のカレンダーID）',
         },
       },
-      required: ['calendarId'],
+      required: ["calendarId"],
     },
   },
 ];

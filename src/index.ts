@@ -1,6 +1,6 @@
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { validateAuth } from './auth.js';
-import { createServer } from './server.js';
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { validateAuth } from "./auth.ts";
+import { createServer } from "./server.ts";
 
 async function main() {
   try {
@@ -15,20 +15,20 @@ async function main() {
     await server.connect(transport);
 
     // シグナルハンドリング
-    process.on('SIGINT', async () => {
+    Deno.addSignalListener("SIGINT", async () => {
       await server.close();
-      process.exit(0);
+      Deno.exit(0);
     });
 
-    process.on('SIGTERM', async () => {
+    Deno.addSignalListener("SIGTERM", async () => {
       await server.close();
-      process.exit(0);
+      Deno.exit(0);
     });
 
-    console.error('Google Calendar MCP Server is running');
+    console.error("Google Calendar MCP Server is running");
   } catch (error) {
-    console.error('サーバーの起動に失敗しました:', error);
-    process.exit(1);
+    console.error("サーバーの起動に失敗しました:", error);
+    Deno.exit(1);
   }
 }
 

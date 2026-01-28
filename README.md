@@ -5,10 +5,12 @@ Google Calendar APIを操作するMCP (Model Context Protocol) サーバーで�
 ## 機能
 
 ### カレンダー操作
+
 - `list_calendars` - カレンダー一覧の取得
 - `get_calendar` - カレンダー詳細の取得
 
 ### イベント操作
+
 - `list_events` - イベント一覧の取得
 - `get_event` - イベント詳細の取得
 - `search_events` - イベントの検索
@@ -17,6 +19,7 @@ Google Calendar APIを操作するMCP (Model Context Protocol) サーバーで�
 - `delete_event` - イベントの削除
 
 ### 定期イベント操作
+
 - `update_recurring_event` - 定期イベントの更新
   - `thisEventOnly`: この予定のみ
   - `all`: すべての予定
@@ -24,10 +27,15 @@ Google Calendar APIを操作するMCP (Model Context Protocol) サーバーで�
 - `delete_recurring_instance` - 定期イベントの特定インスタンス削除
 
 ### ユーティリティ
+
 - `get_freebusy` - 空き時間情報の取得
 - `list_colors` - 利用可能なカラーパレットの取得
 
 ## セットアップ
+
+### 前提条件
+
+- [Deno](https://deno.land/) v2.0 以上
 
 ### 1. Google Cloud Consoleでの準備
 
@@ -45,12 +53,20 @@ export CLIENT_SECRET_PATH="/path/to/client_secret.json"
 export TOKEN_PATH="/path/to/token.json"
 ```
 
-### 3. インストールとビルド
+### 3. 起動
 
 ```bash
-pnpm install
-pnpm build
+deno task start
 ```
+
+以下のパーミッションが必要です（`deno task start` で自動的に付与されます）:
+
+- `--allow-net`: Google
+  APIs、OAuth認証サーバー、ローカルコールバックサーバーへのアクセス
+- `--allow-read`: 認証情報・トークンファイルの読み取り
+- `--allow-write`: トークンファイルの書き込み
+- `--allow-env`: 環境変数の読み取り（`CLIENT_SECRET_PATH`, `TOKEN_PATH`）
+- `--allow-run`: ブラウザの自動起動（OAuth認証フロー）
 
 ### 4. 初回認証
 
@@ -66,8 +82,13 @@ pnpm build
 {
   "mcpServers": {
     "google-calendar": {
-      "command": "node",
-      "args": ["/path/to/google-calendar-mcp/dist/index.js"],
+      "command": "deno",
+      "args": [
+        "task",
+        "--config",
+        "/path/to/google-calendar-mcp/deno.json",
+        "start"
+      ],
       "env": {
         "CLIENT_SECRET_PATH": "/path/to/client_secret.json",
         "TOKEN_PATH": "/path/to/token.json"
@@ -80,7 +101,7 @@ pnpm build
 ### Claude Codeでの設定
 
 ```bash
-claude mcp add google-calendar node /path/to/google-calendar-mcp/dist/index.js \
+claude mcp add google-calendar -- deno task --config /path/to/google-calendar-mcp/deno.json start \
   -e CLIENT_SECRET_PATH=/path/to/client_secret.json \
   -e TOKEN_PATH=/path/to/token.json
 ```
@@ -114,7 +135,7 @@ claude mcp add google-calendar node /path/to/google-calendar-mcp/dist/index.js \
 ## 技術スタック
 
 - TypeScript
-- Node.js >= 18.0.0
+- Deno
 - @modelcontextprotocol/sdk
 - googleapis
 - zod

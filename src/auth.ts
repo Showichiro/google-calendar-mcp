@@ -1,9 +1,6 @@
-import { google, Auth } from 'googleapis';
-import * as fs from 'fs';
-import * as http from 'http';
-import * as url from 'url';
+import { Auth, google } from "googleapis";
 
-const SCOPES = ['https://www.googleapis.com/auth/calendar'];
+const SCOPES = ["https://www.googleapis.com/auth/calendar"];
 
 type OAuth2Client = Auth.OAuth2Client;
 let authClient: OAuth2Client | null = null;
@@ -30,42 +27,44 @@ interface TokenData {
 }
 
 function getCredentialsPath(): string {
-  const envPath = process.env.CLIENT_SECRET_PATH;
+  const envPath = Deno.env.get("CLIENT_SECRET_PATH");
   if (envPath) {
     return envPath;
   }
-  throw new Error('環境変数 CLIENT_SECRET_PATH が設定されていません');
+  throw new Error("環境変数 CLIENT_SECRET_PATH が設定されていません");
 }
 
 function getTokenPath(): string {
-  const envPath = process.env.TOKEN_PATH;
+  const envPath = Deno.env.get("TOKEN_PATH");
   if (envPath) {
     return envPath;
   }
-  throw new Error('環境変数 TOKEN_PATH が設定されていません');
+  throw new Error("環境変数 TOKEN_PATH が設定されていません");
 }
 
 function loadCredentials(): Credentials {
   const credentialsPath = getCredentialsPath();
-  if (!fs.existsSync(credentialsPath)) {
+  try {
+    const content = Deno.readTextFileSync(credentialsPath);
+    return JSON.parse(content);
+  } catch {
     throw new Error(`認証情報ファイルが見つかりません: ${credentialsPath}`);
   }
-  const content = fs.readFileSync(credentialsPath, 'utf-8');
-  return JSON.parse(content);
 }
 
 function loadToken(): TokenData | null {
   const tokenPath = getTokenPath();
-  if (!fs.existsSync(tokenPath)) {
+  try {
+    const content = Deno.readTextFileSync(tokenPath);
+    return JSON.parse(content);
+  } catch {
     return null;
   }
-  const content = fs.readFileSync(tokenPath, 'utf-8');
-  return JSON.parse(content);
 }
 
 function saveToken(token: TokenData): void {
   const tokenPath = getTokenPath();
-  fs.writeFileSync(tokenPath, JSON.stringify(token, null, 2));
+  Deno.writeTextFileSync(tokenPath, JSON.stringify(token, null, 2));
 }
 
 function extractPortFromUri(uri: string): number {
@@ -76,53 +75,71 @@ function extractPortFromUri(uri: string): number {
   return 8080; // デフォルトポート
 }
 
-async function getAuthorizationCode(authUrl: string, port: number): Promise<string> {
+function getAuthorizationCode(
+  authUrl: string,
+  port: number,
+): Promise<string> {
   return new Promise((resolve, reject) => {
-    const server = http.createServer(async (req, res) => {
-      try {
-        if (req.url?.startsWith('/callback')) {
-          const parsedUrl = url.parse(req.url, true);
-          const code = parsedUrl.query.code as string;
+    const ac = new AbortController();
 
-          if (code) {
-            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-            res.end('<h1>認証が完了しました</h1><p>このウィンドウを閉じてください。</p>');
-            server.close();
-            resolve(code);
-          } else {
-            res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
-            res.end('<h1>エラー</h1><p>認証コードが取得できませんでした。</p>');
-            server.close();
-            reject(new Error('認証コードが取得できませんでした'));
-          }
+    const server = Deno.serve({
+      port,
+      signal: ac.signal,
+      onListen() {
+        console.error(
+          `認証が必要です。ブラウザで以下のURLを開いてください:\n${authUrl}`,
+        );
+
+        // 可能であればブラウザを自動で開く
+        try {
+          const command = Deno.build.os === "darwin"
+            ? "open"
+            : Deno.build.os === "windows"
+            ? "cmd"
+            : "xdg-open";
+          const args = Deno.build.os === "windows"
+            ? ["/c", "start", authUrl]
+            : [authUrl];
+          new Deno.Command(command, { args }).spawn();
+        } catch {
+          // ブラウザを開けなくても続行
         }
-      } catch (error) {
-        server.close();
-        reject(error);
+      },
+    }, (req: Request) => {
+      const url = new URL(req.url);
+      if (url.pathname === "/callback") {
+        const code = url.searchParams.get("code");
+        if (code) {
+          // サーバーを停止
+          setTimeout(() => ac.abort(), 100);
+          resolve(code);
+          return new Response(
+            "<h1>認証が完了しました</h1><p>このウィンドウを閉じてください。</p>",
+            { headers: { "Content-Type": "text/html; charset=utf-8" } },
+          );
+        } else {
+          setTimeout(() => ac.abort(), 100);
+          reject(new Error("認証コードが取得できませんでした"));
+          return new Response(
+            "<h1>エラー</h1><p>認証コードが取得できませんでした。</p>",
+            {
+              status: 400,
+              headers: { "Content-Type": "text/html; charset=utf-8" },
+            },
+          );
+        }
       }
-    });
-
-    server.listen(port, () => {
-      console.error(`認証が必要です。ブラウザで以下のURLを開いてください:\n${authUrl}`);
-
-      // 可能であればブラウザを自動で開く
-      import('child_process').then(({ exec }) => {
-        const command = process.platform === 'darwin'
-          ? `open "${authUrl}"`
-          : process.platform === 'win32'
-            ? `start "${authUrl}"`
-            : `xdg-open "${authUrl}"`;
-        exec(command);
-      }).catch(() => {
-        // ブラウザを開けなくても続行
-      });
+      return new Response("Not Found", { status: 404 });
     });
 
     // タイムアウト設定（5分）
     setTimeout(() => {
-      server.close();
-      reject(new Error('認証がタイムアウトしました'));
+      ac.abort();
+      reject(new Error("認証がタイムアウトしました"));
     }, 300000);
+
+    // サーバーの終了を待つ
+    server.finished.catch(() => {});
   });
 }
 
@@ -131,16 +148,20 @@ async function authorize(): Promise<OAuth2Client> {
   const clientCredentials = credentials.installed || credentials.web;
 
   if (!clientCredentials) {
-    throw new Error('認証情報ファイルの形式が不正です');
+    throw new Error("認証情報ファイルの形式が不正です");
   }
 
   const { client_id, client_secret, redirect_uris } = clientCredentials;
 
   // redirect_uriをJSONから取得（なければデフォルト値を使用）
-  const redirectUri = redirect_uris?.[0] || 'http://localhost:8080/callback';
+  const redirectUri = redirect_uris?.[0] || "http://localhost:8080/callback";
   const port = extractPortFromUri(redirectUri);
 
-  const oauth2Client = new google.auth.OAuth2(client_id, client_secret, redirectUri);
+  const oauth2Client = new google.auth.OAuth2(
+    client_id,
+    client_secret,
+    redirectUri,
+  );
 
   // 既存のトークンを確認
   const token = loadToken();
@@ -155,21 +176,22 @@ async function authorize(): Promise<OAuth2Client> {
     // リフレッシュトークンで更新を試みる
     if (token.refresh_token) {
       try {
-        const { credentials: newCredentials } = await oauth2Client.refreshAccessToken();
+        const { credentials: newCredentials } = await oauth2Client
+          .refreshAccessToken();
         saveToken(newCredentials as TokenData);
         oauth2Client.setCredentials(newCredentials);
         return oauth2Client;
       } catch {
-        console.error('トークンの更新に失敗しました。再認証が必要です。');
+        console.error("トークンの更新に失敗しました。再認証が必要です。");
       }
     }
   }
 
   // 新規認証フロー
   const authUrl = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
+    access_type: "offline",
     scope: SCOPES,
-    prompt: 'consent',
+    prompt: "consent",
   });
 
   const code = await getAuthorizationCode(authUrl, port);
@@ -187,15 +209,15 @@ export async function getAuthClient(): Promise<OAuth2Client> {
   return authClient;
 }
 
-export async function validateAuth(): Promise<void> {
+export function validateAuth(): void {
   try {
     getCredentialsPath();
     getTokenPath();
-  } catch (error) {
+  } catch {
     throw new Error(
-      '認証の設定が不完全です。以下の環境変数を設定してください:\n' +
-      '- CLIENT_SECRET_PATH: Google Cloud Consoleからダウンロードした認証情報JSONファイルのパス\n' +
-      '- TOKEN_PATH: トークンを保存するファイルのパス'
+      "認証の設定が不完全です。以下の環境変数を設定してください:\n" +
+        "- CLIENT_SECRET_PATH: Google Cloud Consoleからダウンロードした認証情報JSONファイルのパス\n" +
+        "- TOKEN_PATH: トークンを保存するファイルのパス",
     );
   }
 }
