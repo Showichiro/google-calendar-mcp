@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "start": "deno run --allow-net=www.googleapis.com,accounts.google.com,oauth2.googleapis.com,localhost --allow-read --allow-write --allow-env=CLIENT_SECRET_PATH,TOKEN_PATH --allow-run src/index.ts"
+    "start": "deno run --allow-net=www.googleapis.com,accounts.google.com,oauth2.googleapis.com,localhost --allow-read --allow-write --allow-env --allow-run src/index.ts"
   },
   "lint": {
     "rules": {

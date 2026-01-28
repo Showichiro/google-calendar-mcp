@@ -62,7 +62,7 @@ deno task start
 または、`deno.json` なしで直接実行することもできます:
 
 ```bash
-deno run --allow-net=www.googleapis.com,accounts.google.com,oauth2.googleapis.com,localhost --allow-read --allow-write --allow-env=CLIENT_SECRET_PATH,TOKEN_PATH --allow-run src/index.ts
+deno run --allow-net=www.googleapis.com,accounts.google.com,oauth2.googleapis.com,localhost --allow-read --allow-write --allow-env --allow-run src/index.ts
 ```
 
 以下のパーミッションが必要です（`deno task start` で自動的に付与されます）:
@@ -71,7 +71,7 @@ deno run --allow-net=www.googleapis.com,accounts.google.com,oauth2.googleapis.co
   APIs、OAuth認証サーバー、ローカルコールバックサーバーへのアクセス
 - `--allow-read`: 認証情報・トークンファイルの読み取り
 - `--allow-write`: トークンファイルの書き込み
-- `--allow-env`: 環境変数の読み取り（`CLIENT_SECRET_PATH`, `TOKEN_PATH`）
+- `--allow-env`: 環境変数の読み取り
 - `--allow-run`: ブラウザの自動起動（OAuth認証フロー）
 
 ### 4. 初回認証
@@ -94,7 +94,7 @@ deno run --allow-net=www.googleapis.com,accounts.google.com,oauth2.googleapis.co
         "--allow-net=www.googleapis.com,accounts.google.com,oauth2.googleapis.com,localhost",
         "--allow-read",
         "--allow-write",
-        "--allow-env=CLIENT_SECRET_PATH,TOKEN_PATH",
+        "--allow-env",
         "--allow-run",
         "/path/to/google-calendar-mcp/src/index.ts"
       ],
@@ -115,7 +115,7 @@ claude mcp add google-calendar \
   -e TOKEN_PATH=/path/to/token.json \
   -- deno run \
   --allow-net=www.googleapis.com,accounts.google.com,oauth2.googleapis.com,localhost \
-  --allow-read --allow-write --allow-env=CLIENT_SECRET_PATH,TOKEN_PATH --allow-run \
+  --allow-read --allow-write --allow-env --allow-run \
   /path/to/google-calendar-mcp/src/index.ts
 ```
 
