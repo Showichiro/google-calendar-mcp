@@ -59,6 +59,12 @@ export TOKEN_PATH="/path/to/token.json"
 deno task start
 ```
 
+または、`deno.json` なしで直接実行することもできます:
+
+```bash
+deno run --allow-net=www.googleapis.com,accounts.google.com,oauth2.googleapis.com,localhost --allow-read --allow-write --allow-env=CLIENT_SECRET_PATH,TOKEN_PATH --allow-run src/index.ts
+```
+
 以下のパーミッションが必要です（`deno task start` で自動的に付与されます）:
 
 - `--allow-net`: Google
@@ -84,10 +90,13 @@ deno task start
     "google-calendar": {
       "command": "deno",
       "args": [
-        "task",
-        "--config",
-        "/path/to/google-calendar-mcp/deno.json",
-        "start"
+        "run",
+        "--allow-net=www.googleapis.com,accounts.google.com,oauth2.googleapis.com,localhost",
+        "--allow-read",
+        "--allow-write",
+        "--allow-env=CLIENT_SECRET_PATH,TOKEN_PATH",
+        "--allow-run",
+        "/path/to/google-calendar-mcp/src/index.ts"
       ],
       "env": {
         "CLIENT_SECRET_PATH": "/path/to/client_secret.json",
@@ -101,9 +110,13 @@ deno task start
 ### Claude Codeでの設定
 
 ```bash
-claude mcp add google-calendar -- deno task --config /path/to/google-calendar-mcp/deno.json start \
+claude mcp add google-calendar \
   -e CLIENT_SECRET_PATH=/path/to/client_secret.json \
-  -e TOKEN_PATH=/path/to/token.json
+  -e TOKEN_PATH=/path/to/token.json \
+  -- deno run \
+  --allow-net=www.googleapis.com,accounts.google.com,oauth2.googleapis.com,localhost \
+  --allow-read --allow-write --allow-env=CLIENT_SECRET_PATH,TOKEN_PATH --allow-run \
+  /path/to/google-calendar-mcp/src/index.ts
 ```
 
 ## 使用例

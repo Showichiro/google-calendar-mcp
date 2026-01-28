@@ -650,12 +650,5 @@
     "zod@3.25.76": {
       "integrity": "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="
     }
-  },
-  "workspace": {
-    "dependencies": [
-      "npm:@modelcontextprotocol/sdk@^1.25.0",
-      "npm:googleapis@144",
-      "npm:zod@^3.24.0"
-    ]
   }
 }

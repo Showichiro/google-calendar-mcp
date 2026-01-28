@@ -1,4 +1,4 @@
-import { calendar_v3, google } from "googleapis";
+import { calendar_v3, google } from "npm:googleapis@^144.0.0";
 import { getAuthClient } from "./auth.ts";
 
 let calendarClient: calendar_v3.Calendar | null = null;

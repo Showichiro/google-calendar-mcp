@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "npm:zod@^3.24.0";
 import { getCalendarClient } from "../client.ts";
 
 // 編集スコープの型定義

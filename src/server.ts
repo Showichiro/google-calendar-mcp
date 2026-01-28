@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "npm:@modelcontextprotocol/sdk@^1.25.0/server/mcp.js";
 import { handleToolCall } from "./handler.ts";
 import {
   createEvent,

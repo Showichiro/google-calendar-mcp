@@ -1,4 +1,4 @@
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from "npm:@modelcontextprotocol/sdk@^1.25.0/server/stdio.js";
 import { validateAuth } from "./auth.ts";
 import { createServer } from "./server.ts";
 

@@ -1,4 +1,4 @@
-import { Auth, google } from "googleapis";
+import { Auth, google } from "npm:googleapis@^144.0.0";
 
 const SCOPES = ["https://www.googleapis.com/auth/calendar"];
 

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "npm:zod@^3.24.0";
 import { getCalendarClient } from "../client.ts";
 
 // スキーマ定義
